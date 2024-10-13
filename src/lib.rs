@@ -12,6 +12,8 @@
 /// expression itself will likely not appear in the generated code, but instead
 /// will be assumed in a way that allows for optimizing the surrounding code.
 ///
+/// Can be used in const contexts.
+///
 /// # Safety
 ///
 /// In release mode, the assertion failing is completely *undefined behavior*
@@ -27,6 +29,7 @@
 /// Use this function only when you can prove that the assertion will never be
 /// false. Otherwise, consider just using [`assert`], or if assertions are
 /// undesired in optimized code, use [`debug_assert`].
+///
 /// # Example
 ///
 /// ```
@@ -47,7 +50,7 @@ macro_rules! assert_unchecked {
     ($expr:expr, $($arg:tt)*) => ({
         #[cfg(debug_assertions)]
         {
-            unsafe fn __needs_unsafe(){}
+            const unsafe fn __needs_unsafe(){}
             __needs_unsafe();
             assert!($expr, $($arg)*);
         }
@@ -184,6 +187,8 @@ macro_rules! assert_ne_unchecked {
 /// Equivalent to the [`unreachable!`] macro in builds with `debug_assertions`
 /// on, and otherwise calls [`core::hint::unreachable_unchecked`].
 ///
+/// Can be used in const contexts.
+///
 /// # Safety
 ///
 /// In release mode, reaching this function is completely *undefined behavior*
@@ -214,7 +219,7 @@ macro_rules! unreachable_unchecked {
     ($($arg:tt)*) => ({
         #[cfg(debug_assertions)]
         {
-            unsafe fn __needs_unsafe(){}
+            const unsafe fn __needs_unsafe(){}
             __needs_unsafe();
             unreachable!($($arg)*);
         }
@@ -263,6 +268,25 @@ mod debug_assertion_tests {
     #[should_panic(expected = "assertion message")]
     fn test_assert_fail_message_format() {
         unsafe { assert_unchecked!(NoCopy(0) == NoCopy(1), "assertion {}", "message") }
+    }
+
+    #[test]
+    fn test_const_assert() {
+        const fn const_assert() {
+            // SAFETY: This assertion clearly passes
+            unsafe { assert_unchecked!(1 == 1) }
+        }
+        const_assert();
+    }
+
+    #[test]
+    #[cfg(debug_assertions)]
+    #[should_panic(expected = "assertion failed: 0 == 1")]
+    fn test_const_assert_debug() {
+        const fn const_assert() {
+            unsafe { assert_unchecked!(0 == 1) }
+        }
+        const_assert();
     }
 
     #[test]
@@ -355,5 +379,26 @@ mod debug_assertion_tests {
     #[should_panic(expected = "assertion message")]
     fn test_unreachable_message_format() {
         unsafe { unreachable_unchecked!("assertion {}", "message") }
+    }
+
+    #[test]
+    fn test_const_unreachable() {
+        const fn const_unreachable() {
+            if 1 == 2 {
+                // SAFETY: this is clearly unreachable
+                unsafe { unreachable_unchecked!() }
+            }
+        }
+        const_unreachable();
+    }
+
+    #[test]
+    #[cfg(debug_assertions)]
+    #[should_panic(expected = "internal error: entered unreachable code")]
+    fn test_const_unreachable_debug() {
+        const fn const_unreachable() {
+            unsafe { unreachable_unchecked!() }
+        }
+        const_unreachable();
     }
 }
