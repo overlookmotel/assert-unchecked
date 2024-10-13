@@ -20,5 +20,5 @@ jobs:
         run: cargo build --verbose
       - name: Run tests with debug assertions
         run: cargo test --verbose
-      - name: Run tests withotu debug assertions
+      - name: Run tests without debug assertions
         run: cargo test --release --verbose
