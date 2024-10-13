@@ -277,7 +277,7 @@ mod debug_assertion_tests {
 
     #[test]
     #[cfg(debug_assertions)]
-    #[should_panic(expected = "assertion failed: `(left == right)`")]
+    #[should_panic(expected = "assertion `left == right` failed\n")]
     fn test_assert_eq_fail_no_message() {
         unsafe { assert_eq_unchecked!(NoCopy(0), NoCopy(1)) }
     }
@@ -308,7 +308,7 @@ mod debug_assertion_tests {
 
     #[test]
     #[cfg(debug_assertions)]
-    #[should_panic(expected = "assertion failed: `(left != right)`")]
+    #[should_panic(expected = "assertion `left != right` failed\n")]
     fn test_assert_ne_fail_no_message() {
         unsafe { assert_ne_unchecked!(NoCopy(0), NoCopy(0)) }
     }
